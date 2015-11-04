@@ -1,14 +1,14 @@
 'use strict';
 
 var Test = require('segmentio-integration-tester');
-var Webhooks = require('..');
+var Threads = require('..');
 var assert = require('assert');
 var crypto = require('crypto');
 var express = require('express');
 
-describe('Webhooks', function(){
+describe('Threads', function(){
   var types = ['track', 'identify', 'alias', 'group', 'page', 'screen'];
-  var webhooks;
+  var threads;
   var settings;
   var server;
   var test;
@@ -28,13 +28,13 @@ describe('Webhooks', function(){
     settings = {
       hooks: ['http://localhost:4000']
     };
-    webhooks = new Webhooks(settings);
-    test = Test(webhooks, __dirname);
+    threads = new Threads(settings);
+    test = Test(threads, __dirname);
   });
 
   it('should have the correct settings', function(){
     test
-    .name('Webhooks')
+    .name('Threads')
     .channels(['server', 'mobile', 'client'])
     .timeout('3s')
     .retries(1);
@@ -66,7 +66,7 @@ describe('Webhooks', function(){
           .end(done);
       });
 
-      it('should send to multiple webhooks', function(done){
+      it('should send to multiple threads', function(done){
         var path1 = '/' + type + '/success';
         var path2 = '/' + type + '/error';
 
@@ -105,7 +105,7 @@ describe('Webhooks', function(){
         test.end(done);
       });
 
-      it('should only send to 5 webhooks', function(done){
+      it('should only send to 5 threads', function(done){
         var path = '/' + type + '/success';
         var route = 'http://localhost:4000' + path;
 
@@ -124,7 +124,7 @@ describe('Webhooks', function(){
         test.end(done);
       });
 
-      it('should fail when all webhooks are down', function(done){
+      it('should fail when all threads are down', function(done){
         var path1 = '/' + type + '/down'; // not mounted
         var path2 = '/' + type + '/error';
 
