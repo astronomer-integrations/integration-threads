@@ -1,14 +1,12 @@
-[![Build Status](https://circleci.com/gh/segmentio/integration-webhooks/tree/master.png?style=badge)](https://circleci.com/gh/segmentio/integration-webhooks/tree/master)
-
 # integration-webhooks
 
-Webhooks server-side integration for Segment.
+Webhooks server-side integration for Astronomer.
 
 ## License
 
 (The MIT License)
 
-Copyright (c) 2014 Segment.io &lt;friends@segment.io&gt;
+Copyright (c) 2015 Astronomer &lt;team@astronomer.io&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

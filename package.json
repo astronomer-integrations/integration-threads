@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "Threads server-side integration",
-  "author": "Segment <friends@segment.com>",
+  "author": "schnie",
   "repository": {
     "type": "git",
     "url": "https://github.com/astronomerio/integration-threads"
