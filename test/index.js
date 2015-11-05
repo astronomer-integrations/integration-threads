@@ -3,221 +3,54 @@
 var Test = require('segmentio-integration-tester');
 var Threads = require('..');
 var assert = require('assert');
-var crypto = require('crypto');
-var express = require('express');
 
 describe('Threads', function(){
-  var types = ['track', 'identify', 'alias', 'group', 'page', 'screen'];
-  var threads;
-  var settings;
-  var server;
-  var test;
-  var app;
+    var types = ['track', 'identify', 'page'];
+    var threads;
+    var settings;
+    var test;
 
-  before(function(done){
-    app = express();
-    app.use(express.bodyParser());
-    server = app.listen(4000, done);
-  });
-
-  after(function(done){
-    server.close(done);
-  });
-
-  beforeEach(function(){
-    settings = {
-      hooks: ['http://localhost:4000']
-    };
-    threads = new Threads(settings);
-    test = Test(threads, __dirname);
-  });
-
-  it('should have the correct settings', function(){
-    test
-    .name('Threads')
-    .channels(['server', 'mobile', 'client'])
-    .timeout('3s')
-    .retries(1);
-  });
-
-  types.forEach(function(type){
-    describe('#' + type, function(){
-      var json;
-
-      beforeEach(function(){
-        json = test.fixture(type + '-basic');
-      });
-
-      it('should succeed on valid call', function(done){
-        var route = '/' + type + '/success';
-        settings.hooks = settings.hooks.map(function(hook){
-           return hook + route;
-        });
-
-        app.post(route, function(req, res){
-          assert.deepEqual(req.body, json.output);
-          res.send(200);
-        });
-
-        test
-          .set(settings)
-          [type](json.input)
-          .expects(200)
-          .end(done);
-      });
-
-      it('should send to multiple threads', function(done){
-        var path1 = '/' + type + '/success';
-        var path2 = '/' + type + '/error';
-
-        var route1 = 'http://localhost:4000' + path1;
-        var route2 = 'http://localhost:4000' + path2;
-
-        // route1 is explicitly twice to test when there is a bad webhook.
-        settings.hooks = [route1, route2, route1];
-
-        app.post(path1, function(req, res){
-          assert.deepEqual(req.body, json.output);
-          res.send(200);
-        });
-        app.post(path2, function(req, res){
-          assert.deepEqual(req.body, json.output);
-          res.send(503);
-        });
-
-        test
-          .set(settings)
-          .requests(3)
-          [type](json.input);
-
-        test
-          .request(0)
-          .expects(200);
-
-        test
-          .request(1)
-          .expects(503);
-
-        test
-          .request(2)
-          .expects(200);
-
-        test.end(done);
-      });
-
-      it('should only send to 5 threads', function(done){
-        var path = '/' + type + '/success';
-        var route = 'http://localhost:4000' + path;
-
-        settings.hooks = [route, route, route, route, route, route, route];
-
-        app.post(path, function(req, res){
-          assert.deepEqual(req.body, json.output);
-          res.send(200);
-        });
-
-        test
-          .set(settings)
-          .requests(5)
-          [type](json.input);
-
-        test.end(done);
-      });
-
-      it('should fail when all threads are down', function(done){
-        var path1 = '/' + type + '/down'; // not mounted
-        var path2 = '/' + type + '/error';
-
-        var route1 = 'http://localhost:4000' + path1;
-        var route2 = 'http://localhost:4000' + path2;
-
-        settings.hooks = [route1, route2];
-
-        app.post(path2, function(req, res){
-          assert.deepEqual(req.body, json.output);
-          res.send(503);
-        });
-
-        test
-          .set(settings)
-          .requests(2)
-          [type](json.input);
-
-        test
-          .request(0)
-          .expects(404);
-
-        test
-          .request(1)
-          .expects(503);
-
-        test.error(done);
-      });
-
-      it('should error on invalid calls', function(done){
-        var route = '/' + type + '/error';
-        settings.hooks = settings.hooks.map(function(hook){
-           return hook + route;
-        });
-
-        app.post(route, function(req, res){
-          assert.deepEqual(req.body, json.output);
-          res.send(503);
-        });
-
-        test
-          .set(settings)
-          [type](json.input)
-          .expects(503)
-          .error(done);
-      });
-
-      it('should ignore bad reply', function(done){
-        var route = '/bad';
-        settings.hooks = settings.hooks.map(function(hook){
-           return hook + route;
-        });
-
-        app.post(route, function(req, res){
-          res.set('Content-Type', 'application/json');
-          res.send(200, 'I lied, this is not JSON');
-        });
-
-        test
-          .set(settings)
-          [type](json.input)
-          .expects(200)
-          .end(done);
-      });
-
-      it('should attach an HMAC digest when options.sharedSecret is present', function(done){
-        var route = '/' + type;
-        settings.hooks = settings.hooks.map(function(hook){
-           return hook + route;
-        });
-        settings.sharedSecret = 'teehee';
-
-        app.post(route, function(req, res){
-          var signature = req.headers['x-signature'];
-          var digest = crypto
-            .createHmac('sha1', settings.sharedSecret)
-            .update(JSON.stringify(req.body))
-            .digest('hex');
-
-          assert(signature);
-          assert(signature === digest);
-
-          res.send(200);
-        });
-
-        test
-          .set(settings)
-          [type](json.input)
-          .expects(200)
-          .end(done);
-      });
-
-      // TODO: test limit
+    beforeEach(function(){
+        settings = {
+            eventKey: 'c01be3ce4c7ed82939024dbf39cb8ffbf70b6be6307fcc2c'
+        };
+        threads = new Threads(settings);
+        test = Test(threads, __dirname);
     });
-  });
+
+    it('should have the correct settings', function() {
+        test
+        .name('Threads')
+        .ensure('settings.eventKey')
+        .channels(['server', 'mobile', 'client'])
+        .endpoint('https://input.threads.io/v1/segment/webhook')
+        .timeout('3s');
+    });
+
+    types.forEach(function(type) {
+        describe('#' + type, function(){
+            var json;
+
+            beforeEach(function(){
+                json = test.fixture(type + '-basic');
+            });
+
+            it('should succeed on valid call', function(done){
+                test
+                .set(settings)
+                [type](json.input)
+                .expects(202)
+                .end(done);
+            });
+
+            it('should convert userId to string', function(done){
+                json.input.userId = 1234;
+                test
+                .set(settings)
+                [type](json.input)
+                .expects(202)
+                .end(done);
+            });
+        });
+    });
 });
