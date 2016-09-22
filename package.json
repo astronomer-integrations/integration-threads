@@ -1,5 +1,5 @@
 {
-  "name": "integration-threads",
+  "name": "@astronomerio/integration-threads",
   "version": "1.0.1",
   "private": true,
   "description": "Threads server-side integration",
